@@ -8,7 +8,7 @@ tic;
 %define the size of our working area
 box_size = 10;
 %time of trajectory
-T = 10;
+T = 50;
 %number of obstacles
 num_obst = 0;
 % boundary conditions in state space
@@ -61,18 +61,17 @@ for i=1:num_obst
 end
 legend("Desired", "Actual")
 
-% %% plot control signal
-% figure(2);
-% u = zeros(3,length(t));
-% for i=1:length(t)
-% u(:,i) = FbLinCtrl(t(i),x(i,:));
-% end
-% 
-% plot (t,u);
-% grid on;
-% title('Feedback Linearization Control Signal');
-% legend('d_q','d_r','d_u');
+%% plot control signal
+figure(2);
+u = zeros(3,length(t));
+for i=1:length(t)
+u(:,i)=FbLinCtrl(t(i),x(i,:)');
+end
 
+plot (t,u);
+grid on;
+title('Feedback Linearization Control Signal');
+legend('d_q','d_r','d_u');
 
 
 %display the total time

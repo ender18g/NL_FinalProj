@@ -2,36 +2,29 @@
 clearvars; close all; clc;
 
 % set number of iterations
-iterations = 1e3;
+iterations = 5e3;
 
 %% plot an environment
 
 % define environment
 boxSize = 20;
-safetyDist = .5;
+safetyDist = .6;
 
 % make obstacles
 fig = figure;
-obst{1} =[-2 -boxSize/2 4 boxSize/2];
-obst{2} = [-1 1 2 4];
+obst{1} =[-1 -boxSize/2 2 boxSize/2];
+obst{2} = [-4 1 8 5];
 
 % plot obstacles
-for i=1:numel(obst)
-  rectangle('Position',obst{i},'Curvature',.2)
-  hold on
-  axis equal
-end
-% Set plot size
-limits = [-boxSize/2 boxSize/2];
-xlim(limits);
-ylim(limits);
+plotEnv(obst, boxSize);
+
 
 % Define waypoints
-ip = [7,-9];
-tgt =[-7,-9];
+ip = [2,-9];
+tgt =[-2,-9];
 
 %radius for looking around to rewire
-rad =.5;
+rad =1.5;
 
 % create database x, y, parent
 nl(1).coord = ip;
@@ -45,9 +38,9 @@ i=2;
 tic;
 
 %create an mp4 video of plot
-% v = VideoWriter('RRT');
-% v.FrameRate = 1;
-% open(v);
+v = VideoWriter('RRT','MPEG-4');
+v.FrameRate = 1;
+open(v);
 
 %% Now for the iterations of RRTing
 while(i<iterations)
@@ -56,8 +49,8 @@ while(i<iterations)
   pt = randPt(boxSize,obst,safetyDist);
 
   % find closest parent and distance
+  %[parent,dist,neighbors] = getBestParent(pt,nl,rad);
   [parent,dist] = getParent(pt,nl);
-  %[parent,dist] = getBestParent(pt,nl,rad);
 
   ppt = nl(parent).coord;
 
@@ -77,42 +70,39 @@ while(i<iterations)
   nl(i).cost = totalDist;
   nl(i).terminal=terminal;
   nl(i).dist=dist;
+  nl(i).id =i;
 
-
-  % plot new path
-
-  plot([ppt(1),pt(1)],[ppt(2),pt(2)]);
-  hold on;
+  % now rewire
+%   if (class(neighbors)=='struct')
+%     nl = rewire(nl,neighbors);
+%   end
 
   i=i+1;
   %calc percent complete and update plot
-  if mod(i,500)==0
+  if mod(i,300)==0
     complete = i/iterations;
     disp(complete*100);
+    wptList = plotAll(nl,obst,boxSize,tgt);
     drawnow;
-
     %save to video
-    %frame = getframe(fig);
-    %writeVideo(v,frame);
+    frame = getframe(fig);
+    writeVideo(v,frame);
   end
 
 
 
 end
 
-%% Now for publishing and cleanup
-%find shortest path and plot
-ptList = getShortest(nl,tgt);
-plotPtList(ptList);
+
 
 % Save the final trajectory for 5 frames
-% for i=1:5
-%   %save to video
-%   frame = getframe(fig);
-%   writeVideo(v,frame);
-% end
+for i=1:3
+  %save to video
+  frame = getframe(fig);
+  writeVideo(v,frame);
+end
 
-%close(v);
+close(v);
 toc
 
 
@@ -121,65 +111,157 @@ toc
 
 %% PROGRAM COMPLETE FUNCTIONS BELOW
 
+function out = plotEnv(obst,boxSize)
+% plot obstacles
+for i=1:numel(obst)
+  rectangle('Position',obst{i},'Curvature',.2,'EdgeColor',[0 0 0])
+  hold on
+  axis equal
+end
+
+% Set plot size
+limits = [-boxSize/2 boxSize/2];
+title('RRT Path Planning')
+xlim(limits);
+ylim(limits);
+
+%plot ship
+ship = imread('ship.jpg');
+x = obst{2}(1);
+y = obst{2}(2);
+w = obst{2}(3);
+h = obst{2}(4);
+
+image([x-.1 x+w+.1],[y+h+.1 y-.1],ship);
+
+end
+
+function out = plotAll(nl,obst,boxSize,tgt)
+clf;
+plotEnv(obst,boxSize);
+hold on;
+for i=numel(nl):-1:1
+  pt = nl(i).coord;
+  parentId = nl(i).parent;
+
+  % if parent is the first ip, stop!
+  if parentId ==0
+    break
+  end
+  ppt = nl(parentId).coord;
+  % plot new pat
+  plot([ppt(1),pt(1)],[ppt(2),pt(2)],Color='#4DBEEE');
+  hold on;
+end
+
+%% Now for publishing and cleanup
+%find shortest path and plot
+ptList = getShortest(nl,tgt);
+plotPtList(ptList);
+out = ptList;
+end
+
 function nl = rewire(nl,neighbors)
 
-    % try to rewire
-    if (numel(neighbors)>0)
-      % see if any neighbors would benefit from new node as parent
-      for i=1:length(neighbors)
-        newCost = nl(i);
-        if nl(i).cost
-        end
+% get the newest point
+pt = nl(end);
 
+% see if any neighbors would benefit from new node as parent
+for i=1:numel(neighbors)
+  if (~isfield(neighbors(i),'id'))
+    break;
+  end
+  %get the id of the neighbor
+  id = neighbors(i).id;
+  oldCost = nl(id).cost;
+  dist = norm(pt.coord - nl(id).coord);
+
+  %calculate cost with new point
+  newCost = pt.cost + dist;
+
+  % if the new cost is better, REWIRE
+  if (newCost < oldCost)
+    % assign pt as the new parent
+    nl(id).parent = pt.id;
+    nl(id).cost = newCost;
+    nl(id).dist = dist;
+
+    %change any children of this node with new costs
+    nl = changeChildren(id,nl);
+
+
+  end
+
+end
+
+
+
+  function nl = changeChildren(parentId,nl)
+    parent = nl(parentId);
+    for j=1:numel(nl)
+      % find children
+      if (nl(j).parent == parent.id)
+        % change the childrens' cost
+        nl(j).cost = parent.cost + nl(j).dist;
+
+        %change all grandchildren
+        changeChildren(nl(j).id,nl);
       end
-
     end
 
-    % make connections and update costs
+  end
 
 end
 
 function [bestParent,bestDist,neighbors] = getBestParent(pt,nl,rad)
 
-    % define variables
-    bestDist = norm(pt-nl(1).coord);
-    bestCost = nl(1).cost + bestDist;
-    bestParent = 1;
-    betterParents = 0;
-    numNeighbors = 0;
+% define variables
+bestDist = norm(pt-nl(1).coord);
+bestCost = nl(1).cost + bestDist;
+bestParent = 1;
+betterParents = 0;
+numNeighbors = 0;
 
-    %get all nodes around a radius
-    for i=2:numel(nl)
-      % get distance and cost
-      dist = norm(pt-nl(i).coord);
-      parentCost = nl(i).cost;
-      %check if less than radius
-      if (dist<rad)
-        % we found a neighbor
-        numNeighbors = numNeighbors + 1;
-        neighbors(numNeighbors) = nl(i);
 
-        if (parentCost<bestCost)
-          % we found a better parent
-          betterParents = betterParents +1;
-          bestParent = i;
-          bestDist = dist;
-        end
-      end
-    end
+%get all nodes around a radius
+for i=2:numel(nl)
+  % get distance and cost
+  dist = norm(pt-nl(i).coord);
+  parentCost = nl(i).cost;
+  %check if less than radius
+  if (dist<rad)
+    % we found a neighbor add to neighbor array
+    numNeighbors = numNeighbors + 1;
+    neighbors(numNeighbors)=nl(i);
 
-    % if we didnt get any better parents in radius, go to old fx
-    if (betterParents<1)
-      [bestParent, bestDist] = getParent(pt,nl);
+    if (parentCost<bestCost)
+      % we found a better parent
+      betterParents = betterParents +1;
+      bestParent = i;
+      bestDist = dist;
     end
   end
+end
+
+% if we didnt get any better parents in radius, go to old fx
+if (betterParents<1)
+  [bestParent, bestDist] = getParent(pt,nl);
+end
+
+%if no neighbors found, return 0;
+if(~exist("neighbors"))
+  neighbors = 0;
+end
+
+
+end
 
 function out = plotPtList(ptList)
 
 for i=1:length(ptList)-1
   pt = ptList(i,:);
   ppt = ptList(i+1,:);
-  plot([ppt(1),pt(1)],[ppt(2),pt(2)],LineWidth=2,Color='blue');
+  plot([ppt(1),pt(1)],[ppt(2),pt(2)],LineWidth=4,Color='#77AC30');
 end
 
 end
