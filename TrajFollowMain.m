@@ -32,7 +32,7 @@ A = poly3_coeff(y0, dy0, d2y0, yf, dyf, d2yf, T,5);
 % save A for controller
 save("FbLinParams.mat","A");
 % create path X
-X = A * polyt([0:.01:T],5,0);
+X = A * polyt(0:.01:T,5,0);
 
 %% plot desired path
 figure(1)
@@ -61,17 +61,17 @@ for i=1:num_obst
 end
 legend("Desired", "Actual")
 
-%% plot control signal
-figure(2);
-u = zeros(3,length(t));
-for i=1:length(t)
-u(:,i) = FbLinCtrl(t(i),x(i,:));
-end
-
-plot (t,u);
-grid on;
-title('Feedback Linearization Control Signal');
-legend('d_q','d_r','d_u');
+% %% plot control signal
+% figure(2);
+% u = zeros(3,length(t));
+% for i=1:length(t)
+% u(:,i) = FbLinCtrl(t(i),x(i,:));
+% end
+% 
+% plot (t,u);
+% grid on;
+% title('Feedback Linearization Control Signal');
+% legend('d_q','d_r','d_u');
 
 
 

@@ -22,9 +22,7 @@ dx(2)= uv*cos(theta)*sin(psi);
 dx(3)= -uv*sin(theta);
 
 %define Gains
-K=1*[1; 2; 2];
-
-
+K=.1*[1; 2; 2];
 
 %get error states
 z={};
@@ -40,6 +38,6 @@ v = A*poly3(t)-K(1)*z{1}- K(2)*z{2}-K(3)*z{3};
 inv_G = ig_func(psi,theta,uv);
 F = f_func(T,psi,q,r,theta,uv);
 
-input_vec = inv_G*(v-F)
+input_vec = inv_G*(v-F);
 
 end
