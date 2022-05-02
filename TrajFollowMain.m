@@ -12,10 +12,11 @@ T = 50;
 %number of obstacles
 num_obst = 0;
 % boundary conditions in state space
-x0 = [1,1,1,.1*ones(1,6)]';
-xf = [9,9,2,.1*ones(1,6)]';
+% x y z theta psi uv q r t
+x0 = [1 1 1 .1 pi/4 .1 0 0 .5]';
+xf = [8 8 2 .1 pi/4 .1 0 0 .5]';
 % perturb the system IC with the offset:
-ic_offset = [.5*[1,-1,0]';zeros(6,1)];
+ic_offset = [.2*[1,-1,0]';zeros(6,1)];
 
 %%%%%%%%% TRAJECTORY GENERATION %%%%%%%%%%%%%
 % boundary conditions in flat output space
@@ -52,7 +53,7 @@ zlim(limits);
 %% Plot AUV actual path
 tspan = [0 T];
 [t,x] = ode45(@(t,x) AUVdynamics(t,x),tspan,x0+ic_offset);
-plot3(x(:,1),x(:,2),x(:,3),Color='blue',LineWidth=2,LineStyle='--')
+plot3(x(:,1),x(:,2),x(:,3),Color='blue',LineWidth=2)
 
 % add in obstacles
 for i=1:num_obst

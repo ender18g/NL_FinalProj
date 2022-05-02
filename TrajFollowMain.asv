@@ -8,14 +8,15 @@ tic;
 %define the size of our working area
 box_size = 10;
 %time of trajectory
-T = 10;
+T = 100;
 %number of obstacles
 num_obst = 0;
 % boundary conditions in state space
-x0 = [1,1,1,.1*ones(1,6)]';
-xf = [9,9,2,.1*ones(1,6)]';
+% x y z theta psi uv q r t
+x0 = [1 1 1 0 pi/4  0 0 .01]';
+xf = [8 8 2 0 pi/4 .01 0 0 .01]';
 % perturb the system IC with the offset:
-ic_offset = [.5*[1,-1,0]';zeros(6,1)];
+ic_offset = [.2*[1,-1,0]';zeros(6,1)];
 
 %%%%%%%%% TRAJECTORY GENERATION %%%%%%%%%%%%%
 % boundary conditions in flat output space
@@ -32,7 +33,7 @@ A = poly3_coeff(y0, dy0, d2y0, yf, dyf, d2yf, T,5);
 % save A for controller
 save("FbLinParams.mat","A");
 % create path X
-X = A * polyt([0:.01:T],5,0);
+X = A * polyt(0:.01:T,5,0);
 
 %% plot desired path
 figure(1)
@@ -65,14 +66,13 @@ legend("Desired", "Actual")
 figure(2);
 u = zeros(3,length(t));
 for i=1:length(t)
-u(:,i) = FbLinCtrl(t(i),x(i,:));
+u(:,i)=FbLinCtrl(t(i),x(i,:)');
 end
 
 plot (t,u);
 grid on;
 title('Feedback Linearization Control Signal');
 legend('d_q','d_r','d_u');
-
 
 
 %display the total time
