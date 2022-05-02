@@ -1,0 +1,118 @@
+%clean up workspace
+clearvars; close all; clc;
+
+%define the size of our working area
+box_size = 10;
+
+%number of obstacles
+num_obst = 5;
+
+% boundary conditions in state space
+x0 = 0 * ones(9,1);
+xf = box_size * ones(9,1);
+
+T = 10;
+
+% perturb the system IC with the offset:
+ic_offset = .2 * ones(3,1);
+
+%%%%%%%%% TRAJECTORY GENERATION %%%%%%%%%%%%%
+% boundary conditions in flat output space
+y0 = auv_h(x0);
+yf = auv_h(xf);
+dy0 = 1 * [1;0;0]; % desired starting velocity
+dyf = 1 * [1;0;0]; % desired end velocity
+d2y0 = 0 * [1;0;0]; % desired starting velocity
+d2yf = 0 * [1;0;0]; % desired end velocity
+
+%% compute path coefficients
+A = poly3_coeff(y0, dy0, d2y0, yf, dyf, d2yf, T,5);
+% create path X
+X = A * polyt([0:.01:T],5,0);
+
+% plot desired path
+figure(1)
+plot3(X(1,:), X(2,:), X(3,:), '-r',LineWidth=1.5)
+hold on;
+title("AUV Trajectory Generation")
+grid on;
+ylabel("y");
+xlabel("x");
+zlabel("Depth");
+subtitle("With Differentially Flat Outputs")
+
+% add in obstacles
+for i=1:num_obst
+    obst_size = 1;
+    gen_obstacle(obst_size,box_size*rand(3,1));
+end
+
+% Plot AUV actual path
+tspan = [0 T];
+[t,x] = ode45(@(t,x) AUVdynamics(t,x),tspan,x0);
+plot3(x(:,1),x(:,2),x(:,3))
+
+
+%generate a lambda vector (time, deg of t^deg, diff times)
+function output = polyt(T,deg,dt)
+
+syms t;
+t_vector = t* ones(deg+1,1);
+
+%loop through and find eac value of t
+for i = 1:length(t_vector)
+    t_vector(i)=t^(deg+1-i);
+end
+
+%differentiate (0 is no differentiation)
+for i=1:dt
+    t_vector = diff(t_vector,t);
+end
+%finally evaluate at t (or array of t)
+t=T;
+output = subs(t_vector);
+
+end
+
+function A = poly3_coeff(y0, dy0, d2y0, yf, dyf, d2yf, T,deg)
+% computes cubic curve connecting (y0,dy0) and (yf, dyf) at time T
+Y = [y0, dy0, d2y0, yf, dyf d2yf];
+L = [polyt(0,deg,0), polyt(0,deg,1), polyt(0,deg,2)...
+    polyt(T,deg,0), polyt(T,deg,1), polyt(T,deg,2)];
+A = Y/L;
+end
+
+function f = poly5(t)
+f = polyt()
+end
+
+function f = poly3(t)
+f = [t.^3; t.^2; t; ones(size(t))];
+end
+
+function f = dpoly3(t)
+f = [3*t.^2; 2*t; ones(size(t)); zeros(size(t))];
+end
+
+function f = d2poly3(t)
+f = [6*t; 2; zeros(size(t)); zeros(size(t))];
+end
+
+function f = auv_h(x)
+f = x(1:3);
+end
+
+function f = gen_obstacle(r,pos)
+%define variables XYZ
+[X, Y, Z] = sphere;
+
+%Create sphere vector
+X2 = X * r;
+Y2 = Y * r;
+Z2 = Z * r;
+
+%plot sphere
+sphereObj = surf(X2+pos(1),Y2+pos(2),Z2+pos(3));
+set(sphereObj,'edgecolor', 'none');
+
+end
