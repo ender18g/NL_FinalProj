@@ -44,7 +44,7 @@ input_vec = inv_G*(v-F);
 
 
 
-bounds = 1 * [1 1 5];
+bounds = 10 * [1 1 5];
 
 for i=1:length(bounds)
     if input_vec(i)>bounds(i)

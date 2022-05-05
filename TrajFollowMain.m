@@ -13,7 +13,7 @@ T = 50;
 num_obst = 0;
 % boundary conditions in state space
 % x y z theta psi uv q r t
-x0 = [1 1 1 .1 pi/4 .1 0 0 .5]';
+x0 = [1 1 1 .1 pi/4 .1 .1 0 .5]';
 xf = [8 8 2 .1 pi/4 .1 0 0 .5]';
 % perturb the system IC with the offset:
 ic_offset = [.2*[1,-1,0]';zeros(6,1)];
