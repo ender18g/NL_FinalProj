@@ -2,7 +2,7 @@
 clearvars; close all; clc;
 
 % set number of iterations
-iterations = 1e4;
+iterations = 1e5;
 
 %% plot an environment
 
