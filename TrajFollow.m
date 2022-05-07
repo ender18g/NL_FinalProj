@@ -1,22 +1,19 @@
-%clean up workspace
-clearvars; close all; clc;
-%perform necessary calculations / function generation
-FeedbackLinCalc;
+function [t x] = TrajFollow(x0,xf,T)
+%pass in x0, xf and time
+
+%FeedbackLinCalc;
 %add functions path
 addpath('functions');
 tic; 
 %define the size of our working area
 box_size = 10;
 %time of trajectory
-T = 50;
+
 %number of obstacles
 num_obst = 0;
 % boundary conditions in state space
 % x y z theta psi uv q r t
-x0 = [1 1 1 .1 pi/4 .1 .1 0 .5]';
-xf = [8 8 2 .1 pi/4 .1 0 0 .5]';
-% perturb the system IC with the offset:
-ic_offset = [.2*[1,-1,0]';zeros(6,1)];
+
 
 %%%%%%%%% TRAJECTORY GENERATION %%%%%%%%%%%%%
 % boundary conditions in flat output space
@@ -36,7 +33,7 @@ save("FbLinParams.mat","A");
 X = A * polyt(0:.01:T,5,0);
 
 %% plot desired path
-figure(1)
+figure(3)
 plot3(X(1,:), X(2,:), X(3,:), '-r',LineWidth=1.5)
 hold on;
 title("AUV Trajectory Following")
@@ -52,8 +49,9 @@ subtitle("Using Feedback Linearization")
 
 %% Plot AUV actual path
 tspan = [0 T];
-[t,x] = ode45(@(t,x) AUVdynamics(t,x),tspan,x0+ic_offset);
+[t,x] = ode45(@(t,x) AUVdynamics(t,x),tspan,x0);
 plot3(x(:,1),x(:,2),x(:,3),Color='blue',LineWidth=2)
+hold on;
 
 % add in obstacles
 for i=1:num_obst
@@ -63,13 +61,14 @@ end
 legend("Desired", "Actual")
 
 %% plot control signal
-figure(2);
+figure(4);
 u = zeros(3,length(t));
 for i=1:length(t)
 u(:,i)=FbLinCtrl(t(i),x(i,:)');
 end
 
 plot (t,u);
+hold on;
 grid on;
 title('Feedback Linearization Control Signal');
 legend('d_q','d_r','d_u');
@@ -77,6 +76,8 @@ legend('d_q','d_r','d_u');
 
 %display the total time
 toc
+end
+
 function A = poly3_coeff(y0, dy0, d2y0, yf, dyf, d2yf, T,deg)
 % computes cubic curve connecting (y0,dy0) and (yf, dyf) at time T
 Y = [y0, dy0, d2y0, yf, dyf d2yf];

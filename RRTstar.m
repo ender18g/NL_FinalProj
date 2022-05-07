@@ -9,7 +9,7 @@ function wptList = RRTstar(iterations,scale)
 
 % define environment
 boxSize = scale*20;
-safetyDist = scale*.2;
+safetyDist = scale*.7;
 
 % make obstacles
 fig = figure;
