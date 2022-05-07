@@ -1,4 +1,4 @@
-function dx = AUVdynamics(t,x)
+function dx = AUVdynamics(t,x,current)
 %ODE Function to simulate AUV dynamics
 
 %load in model paramters
@@ -34,6 +34,10 @@ dx(6) = Xuu * uv^2 + a * T;
 dx(7) = Muq * uv * q + Mq * q - B * sin(theta)+ b * uv^2 * d_q;
 dx(8) = Nur * uv*r + c*uv^2*d_r;
 dx(9) = d_u;
+
+
+%add in current
+dx(1:3) = dx(1:3)+current;
 
 end
 

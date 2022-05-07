@@ -1,4 +1,4 @@
-function [t x] = TrajFollow(x0,xf,T)
+function out = TrajFollow(x0,xf,T,current)
 %pass in x0, xf and time
 
 %FeedbackLinCalc;
@@ -49,7 +49,9 @@ subtitle("Using Feedback Linearization")
 
 %% Plot AUV actual path
 tspan = [0 T];
-[t,x] = ode45(@(t,x) AUVdynamics(t,x),tspan,x0);
+[t,x] = ode45(@(t,x) AUVdynamics(t,x,current),tspan,x0);
+out.t = t;
+out.x = x;
 plot3(x(:,1),x(:,2),x(:,3),Color='blue',LineWidth=1)
 hold on;
 
