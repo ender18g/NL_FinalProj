@@ -6,7 +6,7 @@ addpath("functions/")
 scale =20;
 
 % get waypoints
-iterations = 5e2;
+iterations = 2e3;
 wptList = RRTstar(iterations,scale);
 
 %% plot an environment
@@ -23,6 +23,9 @@ obst{2} = scale*[-4 1 8 5];
 % plot obstacles
 plotEnv(obst, boxSize);
 
+%reverse order of points!
+wptList=flip(wptList)
+
 % plot the path
 plotPtList(wptList);
 
@@ -35,7 +38,7 @@ xf(1:2) = cur_pt;
 xf(5)=atan2(next_pt(2)-cur_pt(2),next_pt(1)-cur_pt(1));
 
 % for each set of waypoints
-for i=1:10
+for i=1:length(wptList)
     %the last xf is the new x0
     x0= xf;
 

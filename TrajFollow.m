@@ -34,7 +34,7 @@ X = A * polyt(0:.01:T,5,0);
 
 %% plot desired path
 figure(3)
-plot3(X(1,:), X(2,:), X(3,:), '-r',LineWidth=1.5)
+plot3(X(1,:), X(2,:), X(3,:), '--r',LineWidth=2)
 hold on;
 title("AUV Trajectory Following")
 grid on;
@@ -50,7 +50,7 @@ subtitle("Using Feedback Linearization")
 %% Plot AUV actual path
 tspan = [0 T];
 [t,x] = ode45(@(t,x) AUVdynamics(t,x),tspan,x0);
-plot3(x(:,1),x(:,2),x(:,3),Color='blue',LineWidth=2)
+plot3(x(:,1),x(:,2),x(:,3),Color='blue',LineWidth=1)
 hold on;
 
 % add in obstacles
