@@ -1,0 +1,42 @@
+%%Follow RRTpath
+%clean up
+clearvars; close all; clc;
+
+
+% get waypoints
+iterations = 1000;
+wptList = RRTstar(iterations);
+
+% plot the path
+figure(2);
+plotPtList(wptList);
+
+
+% for each set of waypoints
+
+
+% set initial conditions
+
+
+% get trajectory
+
+
+% plot the trajectory
+
+
+% plot the error
+
+
+
+%%%%% FUNCTIONS
+
+function out = plotPtList(ptList)
+
+for i=1:length(ptList)-1
+  pt = ptList(i,:);
+  ppt = ptList(i+1,:);
+  plot([ppt(1),pt(1)],[ppt(2),pt(2)],LineWidth=4,Color='#D95319');
+  hold on
+end
+
+end

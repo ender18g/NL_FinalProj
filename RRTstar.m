@@ -1,5 +1,4 @@
-function wptList =RRTstar(iterations)
-
+function wptList = RRTstar(iterations,scale)
 
 
 %% Develop an RRT algorithm for AUV
@@ -9,24 +8,24 @@ function wptList =RRTstar(iterations)
 %% plot an environment
 
 % define environment
-boxSize = 20;
-safetyDist = .6;
+boxSize = scale*20;
+safetyDist = scale*.2;
 
 % make obstacles
 fig = figure;
-obst{1} =[-1 -boxSize/2 2 boxSize/2];
-obst{2} = [-4 1 8 5];
+obst{1} = scale*[-1 -boxSize/2 2 boxSize/2];
+obst{2} = scale*[-4 1 8 5];
 
 % plot obstacles
 plotEnv(obst, boxSize);
 
 
 % Define waypoints
-ip = [2,-9];
-tgt =[-2,-9];
+ip = scale*[2,-9];
+tgt =scale *[-2,-9];
 
 %radius for looking around to rewire
-rad =1.5;
+rad =scale*1;
 
 % create database x, y, parent
 nl(1).coord = ip;
@@ -80,14 +79,18 @@ while(i<iterations)
 
   i=i+1;
   %calc percent complete and update plot
-  if mod(i,300)==0
+  if mod(i,500)==0
     complete = i/iterations;
     disp(complete*100);
+    try
     wptList = plotAll(nl,obst,boxSize,tgt);
     drawnow;
     %save to video
     frame = getframe(fig);
     writeVideo(v,frame);
+    catch
+        disp('no good route')
+    end
   end
 
 
@@ -108,34 +111,11 @@ toc
 
 
 
-
+end
 
 %% PROGRAM COMPLETE FUNCTIONS BELOW
 
-function out = plotEnv(obst,boxSize)
-% plot obstacles
-for i=1:numel(obst)
-  rectangle('Position',obst{i},'Curvature',.2,'EdgeColor',[0 0 0])
-  hold on
-  axis equal
-end
 
-% Set plot size
-limits = [-boxSize/2 boxSize/2];
-title('RRT* Path Planning')
-xlim(limits);
-ylim(limits);
-
-%plot ship
-ship = imread('ship.jpg');
-x = obst{2}(1);
-y = obst{2}(2);
-w = obst{2}(3);
-h = obst{2}(4);
-
-image([x-.1 x+w+.1],[y+h+.1 y-.1],ship);
-
-end
 
 function out = plotAll(nl,obst,boxSize,tgt)
 clf;

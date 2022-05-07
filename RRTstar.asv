@@ -1,24 +1,24 @@
-%% Develop an RRT algorithm for AUV
-clearvars; close all; clc;
+function wptList = RRTstar(iterations)
 
-% set number of iterations
-iterations = 5e4;
+%% Develop an RRT algorithm for AUV
+
+
 
 %% plot an environment
 
 % define environment
-boxSize = 20;
+boxSize = 10* 20;
 safetyDist = .6;
 
 % make obstacles
 fig = figure;
-obst{1} =[-1 -boxSize/2 2 boxSize/2];
-obst{2} = [-4 1 8 5];
+obst{1} =10*[-1 -boxSize/2 2 boxSize/2];
+obst{2} = 10*[-4 1 8 5];
 
 % plot obstacles
 plotEnv(obst, boxSize);
 
-
+disp('done plot')
 % Define waypoints
 ip = [2,-9];
 tgt =[-2,-9];
@@ -106,34 +106,11 @@ toc
 
 
 
-
+end
 
 %% PROGRAM COMPLETE FUNCTIONS BELOW
 
-function out = plotEnv(obst,boxSize)
-% plot obstacles
-for i=1:numel(obst)
-  rectangle('Position',obst{i},'Curvature',.2,'EdgeColor',[0 0 0])
-  hold on
-  axis equal
-end
 
-% Set plot size
-limits = [-boxSize/2 boxSize/2];
-title('RRT* Path Planning')
-xlim(limits);
-ylim(limits);
-
-%plot ship
-ship = imread('ship.jpg');
-x = obst{2}(1);
-y = obst{2}(2);
-w = obst{2}(3);
-h = obst{2}(4);
-
-image([x-.1 x+w+.1],[y+h+.1 y-.1],ship);
-
-end
 
 function out = plotAll(nl,obst,boxSize,tgt)
 clf;
@@ -328,8 +305,10 @@ while(1)
   y = rand * boxSize - boxSize/2;
   pt = [x,y];
   if (~collides(pt,obst,safetyDist))
+      disp('collides')
     return
   end
+  
 
 end
 end
