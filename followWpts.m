@@ -4,10 +4,10 @@ close all; clc;
 addpath("functions/")
 
 scale =20;
-current = [2.5 0 0]';
+current = [2 0 0]';
 
 % get waypoints
-iterations = 1e3;
+iterations = 6e3;
 wptList = RRTstar(iterations,scale);
 wptList = flip(wptList);
 
@@ -32,59 +32,59 @@ plot(wptList(:,1),wptList(:,2),LineWidth=1.5,LineStyle='--', ...
 %now add a gradual descent and climb to surface
 wptList = [wptList(:,1:2), zeros(length(wptList),1)];
 surface = 15;
-climb_d = 100;
+climb_d = 50;
 slope = surface/climb_d;
 
-%set the beginning and end at surface
-wptList(1,3) = surface;
-wptList(end,3)=surface;
-
-
-wptList=flip(wptList);
-%this loop is for the climb
-for i=1:(length(wptList)-1)
-    cur_pt = wptList(i,:);
-    next_pt = wptList(i+1,:);
-    
-    %get the horizontal dist
-    dist = norm(cur_pt-next_pt);
-    current_z = cur_pt(3);
-    
-    % if you arent a 0, go to 0 max dist
-    if current_z>0
-        next_d=current_z - dist*(slope);
-        if next_d<0
-            next_d = 0;
-        end
-        %set the desired depth for the next point
-        wptList(i+1,3)=next_d;
-    end
-
-end
-
-%reverse order of points!
-wptList=flip(wptList);
-
-%this loop is for the descent
-for i=1:(length(wptList)-1)
-    cur_pt = wptList(i,:);
-    next_pt = wptList(i+1,:);
-    
-    %get the horizontal dist
-    dist = norm(cur_pt-next_pt);
-    current_z = cur_pt(3);
-    
-    % if you arent a 0, go to 0 max dist
-    if current_z>0
-        next_d=current_z - dist*(slope);
-        if next_d<0
-            next_d = 0;
-        end
-        %set the desired depth for the next point
-        wptList(i+1,3)=next_d;
-    end
-
-end
+% %set the beginning and end at surface
+% wptList(1,3) = surface;
+% wptList(end,3)=surface;
+% 
+% 
+% wptList=flip(wptList);
+% %this loop is for the climb
+% for i=1:(length(wptList)-5)
+%     cur_pt = wptList(i,:);
+%     next_pt = wptList(i+1,:);
+%     
+%     %get the horizontal dist
+%     dist = norm(cur_pt-next_pt);
+%     current_z = cur_pt(3);
+%     
+%     % if you arent a 0, go to 0 max dist
+%     if current_z>0
+%         next_d=current_z - dist*(slope);
+%         if next_d<0
+%             next_d = 0;
+%         end
+%         %set the desired depth for the next point
+%         wptList(i+1,3)=next_d;
+%     end
+% 
+% end
+% 
+% %reverse order of points!
+% wptList=flip(wptList);
+% 
+% %this loop is for the descent
+% for i=1:(length(wptList)-5)
+%     cur_pt = wptList(i,:);
+%     next_pt = wptList(i+1,:);
+%     
+%     %get the horizontal dist
+%     dist = norm(cur_pt-next_pt);
+%     current_z = cur_pt(3);
+%     
+%     % if you arent a 0, go to 0 max dist
+%     if current_z>0
+%         next_d=current_z - dist*(slope);
+%         if next_d<0
+%             next_d = 0;
+%         end
+%         %set the desired depth for the next point
+%         wptList(i+1,3)=next_d;
+%     end
+% 
+% end
 
 
 % start 15 meters above path (surface)
