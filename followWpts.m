@@ -4,11 +4,12 @@ close all; clc;
 addpath("functions/")
 
 scale =20;
-current = [.2 0 0]';
+current = [2.5 0 0]';
 
 % get waypoints
-iterations = 1e4;
-%wptList = RRTstar(iterations,scale);
+iterations = 1e3;
+wptList = RRTstar(iterations,scale);
+wptList = flip(wptList);
 
 %% plot an environment
 
@@ -24,18 +25,74 @@ obst{2} = scale*[-4 1 8 5];
 % plot obstacles
 plotEnv(obst, boxSize);
 
-%reverse order of points!
-wptList=flip(wptList);
-
 % plot the path
 plot(wptList(:,1),wptList(:,2),LineWidth=1.5,LineStyle='--', ...
     Color='#EDB120',DisplayName='RRT* Path');
 
+%now add a gradual descent and climb to surface
+wptList = [wptList(:,1:2), zeros(length(wptList),1)];
+surface = 15;
+climb_d = 100;
+slope = surface/climb_d;
+
+%set the beginning and end at surface
+wptList(1,3) = surface;
+wptList(end,3)=surface;
+
+
+wptList=flip(wptList);
+%this loop is for the climb
+for i=1:(length(wptList)-1)
+    cur_pt = wptList(i,:);
+    next_pt = wptList(i+1,:);
+    
+    %get the horizontal dist
+    dist = norm(cur_pt-next_pt);
+    current_z = cur_pt(3);
+    
+    % if you arent a 0, go to 0 max dist
+    if current_z>0
+        next_d=current_z - dist*(slope);
+        if next_d<0
+            next_d = 0;
+        end
+        %set the desired depth for the next point
+        wptList(i+1,3)=next_d;
+    end
+
+end
+
+%reverse order of points!
+wptList=flip(wptList);
+
+%this loop is for the descent
+for i=1:(length(wptList)-1)
+    cur_pt = wptList(i,:);
+    next_pt = wptList(i+1,:);
+    
+    %get the horizontal dist
+    dist = norm(cur_pt-next_pt);
+    current_z = cur_pt(3);
+    
+    % if you arent a 0, go to 0 max dist
+    if current_z>0
+        next_d=current_z - dist*(slope);
+        if next_d<0
+            next_d = 0;
+        end
+        %set the desired depth for the next point
+        wptList(i+1,3)=next_d;
+    end
+
+end
+
+
+% start 15 meters above path (surface)
 xf = [0 0 0 0 0 .5 0 0 .1];
 cur_pt = wptList(1,:);
 next_pt = wptList(2,:);
 % set the xy position
-xf(1:2) = cur_pt;
+xf(1:3) = cur_pt;
 %set psi
 xf(5)=atan2(next_pt(2)-cur_pt(2),next_pt(1)-cur_pt(1));
 
@@ -48,27 +105,28 @@ v = VideoWriter('traj_follow','MPEG-4');
 v.FrameRate = 4;
 open(v);
 
-
-
 %% for each set of waypoints
 for i=(1:length(wptList)-1)
 %for i=1:3
     %the last xf is the new x0
     x0= xf;
 
-    %the next xf
-    xf = [0 0 0 0 0 .5 0 0 .1];
     cur_pt = wptList(i,:);
     next_pt = wptList(i+1,:);
+    %get the dist
+    dist = norm(cur_pt-next_pt);
+
+    %the next xf
+    xf = [0 0 0 0 0 .5 0 0 .1];
+
     
-    % set the xy position
-    xf(1:2) = next_pt;
+    % set the xyz position
+    xf(1:3) = next_pt;
     
     %set theta
     xf(5)=atan2(next_pt(2)-cur_pt(2),next_pt(1)-cur_pt(1));
 
-    %get the dist
-    dist = norm(cur_pt-next_pt);
+
 
     % now simulate
     segment =TrajFollow(x0',xf',dist,current);
@@ -90,17 +148,18 @@ close(v);
 % plot the desired trajectory
 figure(fig)
 plot(traj.X(1,:), traj.X(2,:),LineWidth=1.5,Color='red',LineStyle='--', ...
-    DisplayName="Actual AUV Trajectory")
+    DisplayName="Generated Poly Fit Trajectory")
 
 %%
 % plot the trajectory
 figure(fig)
 plot(traj.x(:,1),traj.x(:,2),LineWidth=1,Color='blue', ...
-    DisplayName="Generated Poly Fit Trajectory")
+    DisplayName="Actual AUV Trajectory")
 title("AUV Mission Execution")
-subtitle("With [0.5 0 0] m/s Current")
+subtitle("With [2.5 0 0] m/s Current")
 xlabel('X (meters)')
 ylabel('Y (meters)')
+grid on;
 legend
 
 

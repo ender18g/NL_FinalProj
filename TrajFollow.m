@@ -6,7 +6,7 @@ function out = TrajFollow(x0,xf,T,current)
 addpath('functions');
 tic; 
 %define the size of our working area
-box_size = 10;
+box_size = 200;
 %time of trajectory
 
 %number of obstacles
@@ -43,6 +43,8 @@ grid on;
 ylabel("y");
 xlabel("x");
 zlabel("z");
+xlim([-box_size box_size])
+ylim([-box_size box_size])
 subtitle("Using Feedback Linearization")
 
 %% Plot AUV actual path
