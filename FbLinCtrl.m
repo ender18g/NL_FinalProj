@@ -22,7 +22,7 @@ dx(2)= uv*cos(theta)*sin(psi);
 dx(3)= -uv*sin(theta);
 
 %define Gains
-K=.1*[1; 10; 10];
+K=.5*[5; 10; 10];
 
 
 
@@ -44,7 +44,7 @@ input_vec = inv_G*(v-F);
 
 
 
-bounds = 10 * [1 1 5];
+bounds = 5 * [1 1 1];
 
 for i=1:length(bounds)
     if input_vec(i)>bounds(i)

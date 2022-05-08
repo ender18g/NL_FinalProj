@@ -1,14 +1,14 @@
 %%Follow RRTpath
 %clean up
-clearvars; close all; clc;
+close all; clc;
 addpath("functions/")
 
 scale =20;
 current = [.2 0 0]';
 
 % get waypoints
-iterations = 2e3;
-wptList = RRTstar(iterations,scale);
+iterations = 1e4;
+%wptList = RRTstar(iterations,scale);
 
 %% plot an environment
 
@@ -28,7 +28,8 @@ plotEnv(obst, boxSize);
 wptList=flip(wptList);
 
 % plot the path
-plotPtList(wptList,1,'#D95319');
+plot(wptList(:,1),wptList(:,2),LineWidth=1.5,LineStyle='--', ...
+    Color='#EDB120',DisplayName='RRT* Path');
 
 xf = [0 0 0 0 0 .5 0 0 .1];
 cur_pt = wptList(1,:);
@@ -40,10 +41,18 @@ xf(5)=atan2(next_pt(2)-cur_pt(2),next_pt(1)-cur_pt(1));
 
 traj.x = [];
 traj.t = [];
+traj.X = [];
+
+%create an mp4 video of plot
+v = VideoWriter('traj_follow','MPEG-4');
+v.FrameRate = 4;
+open(v);
 
 
-% for each set of waypoints
+
+%% for each set of waypoints
 for i=(1:length(wptList)-1)
+%for i=1:3
     %the last xf is the new x0
     x0= xf;
 
@@ -64,39 +73,42 @@ for i=(1:length(wptList)-1)
     % now simulate
     segment =TrajFollow(x0',xf',dist,current);
 
-    traj.x = [traj.x; segment.x];
-    traj.t = [traj.t; segment.t];
+    traj.x = [traj.x; segment.x_act];
+    traj.t = [traj.t; segment.t_act];
+    traj.X = [traj.X segment.X_des];
     
     %get the last position as the new x0
-    xf = segment.x(end,:);
+    xf = segment.x_act(end,:);
 
-
+    writeVideo(v,segment.frame);
 
 end
+
+close(v);
+
+%%
+% plot the desired trajectory
+figure(fig)
+plot(traj.X(1,:), traj.X(2,:),LineWidth=1.5,Color='red',LineStyle='--', ...
+    DisplayName="Actual AUV Trajectory")
 
 %%
 % plot the trajectory
 figure(fig)
+plot(traj.x(:,1),traj.x(:,2),LineWidth=1,Color='blue', ...
+    DisplayName="Generated Poly Fit Trajectory")
+title("AUV Mission Execution")
+subtitle("With [0.5 0 0] m/s Current")
+xlabel('X (meters)')
+ylabel('Y (meters)')
+legend
 
-plotPtList(traj.x(:,1:2),1.5,'blue')
 
+% plot current
+spacing = 30;
 
-% plot the error
-
-
-
-%%%%% FUNCTIONS
-
-function out = plotPtList(ptList,width,color)
-
-for i=1:length(ptList)-1
-  pt = ptList(i,:);
-  ppt = ptList(i+1,:);
-  plot([ppt(1),pt(1)],[ppt(2),pt(2)],LineWidth=width,Color=color);
-  hold on;
-end
-
-end
+[mesh_X,mesh_Y] = meshgrid(-boxSize:spacing:boxSize,-boxSize:spacing:boxSize);
+%quiver(mesh_X,mesh_Y,.5*ones(length(mesh_X)),zeros(length(mesh_X)));
 
 
 

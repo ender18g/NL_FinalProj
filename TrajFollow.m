@@ -31,9 +31,11 @@ A = poly3_coeff(y0, dy0, d2y0, yf, dyf, d2yf, T,5);
 save("FbLinParams.mat","A");
 % create path X
 X = A * polyt(0:.01:T,5,0);
+%safe the desired path
+out.X_des = double(X);
 
 %% plot desired path
-figure(3)
+figure(3);
 plot3(X(1,:), X(2,:), X(3,:), '--r',LineWidth=2)
 hold on;
 title("AUV Trajectory Following")
@@ -42,16 +44,12 @@ ylabel("y");
 xlabel("x");
 zlabel("z");
 subtitle("Using Feedback Linearization")
-% limits = [0 10];
-% xlim(limits);
-% ylim(limits);
-% zlim(limits);
 
 %% Plot AUV actual path
 tspan = [0 T];
 [t,x] = ode45(@(t,x) AUVdynamics(t,x,current),tspan,x0);
-out.t = t;
-out.x = x;
+out.t_act = t;
+out.x_act = x;
 plot3(x(:,1),x(:,2),x(:,3),Color='blue',LineWidth=1)
 hold on;
 
@@ -62,18 +60,7 @@ for i=1:num_obst
 end
 legend("Desired", "Actual")
 
-%% plot control signal
-figure(4);
-u = zeros(3,length(t));
-for i=1:length(t)
-u(:,i)=FbLinCtrl(t(i),x(i,:)');
-end
-
-plot (t,u);
-hold on;
-grid on;
-title('Feedback Linearization Control Signal');
-legend('d_q','d_r','d_u');
+out.frame = getframe(3);
 
 
 %display the total time
