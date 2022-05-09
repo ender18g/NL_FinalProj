@@ -49,7 +49,12 @@ subtitle("Using Feedback Linearization")
 
 %% Plot AUV actual path
 tspan = [0 T];
-[t,x] = ode45(@(t,x) AUVdynamics(t,x,current),tspan,x0);
+
+
+Opt =odeset('Events',@(t,x) eventsFcn(t,x,T,xf) );
+[t,x,te,ye,ie] = ode45(@(t,x) AUVdynamics(t,x,current),tspan,x0,Opt);
+
+
 out.t_act = t;
 out.x_act = x;
 plot3(x(:,1),x(:,2),x(:,3),Color='blue',LineWidth=1)

@@ -8,19 +8,19 @@ tic;
 %define the size of our working area
 box_size = 10;
 %time of trajectory
-T = 60;
+T = 70;
 %number of obstacles
 num_obst = 0;
 % boundary conditions in state space
 % x y z theta psi uv q r t
-x0 = [0 0 0 0 0 .5 0 0 .1]';
-xf = [50 50 5 0 0 .5 0 0 0]';
+x0 = [0 0 0 0 0 .5 0 0 0]';
+xf = [50 50 5 0 0 .5 0 0 1]';
 
 %define current
-current = 0 * [1 0 0]';
+current = 2 * [1 0 0]';
 
 % perturb the system IC with the offset:
-ic_offset = [10*[0,-1,-1/5]';zeros(6,1)];
+ic_offset = [5*[0,-1,-1/5]';zeros(6,1)];
 
 %%%%%%%%% TRAJECTORY GENERATION %%%%%%%%%%%%%
 % boundary conditions in flat output space
@@ -54,7 +54,10 @@ subtitle(sprintf("Current = [%.1f,%.1f,%.1f] m/s",current))
 
 %% Plot AUV actual path
 tspan = [0 T];
-[t,x] = ode45(@(t,x) AUVdynamics(t,x,current),tspan,x0+ic_offset);
+
+Opt =odeset('Events',@(t,x) eventsFcn(t,x,T,xf) );
+[t,x,te,ye,ie] = ode45(@(t,x) AUVdynamics(t,x,current),tspan,x0+ic_offset,Opt);
+
 plot3(x(:,1),x(:,2),x(:,3),Color='blue',LineWidth=1.5)
 
 % add in obstacles
@@ -84,11 +87,10 @@ ylabel('Control Signal')
 % generate error vector
 traj_des = double(A* polyt(t',5,0));
 error = x(:,1:3) - traj_des(1:3,:)';
-
 norm_e = zeros(length(t),1);
 
 for i=1:length(t)
-norm_e(i) = norm(error(i));
+norm_e(i) = norm(error(i,:));
 end
 
 

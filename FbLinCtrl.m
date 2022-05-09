@@ -22,7 +22,7 @@ dx(2)= uv*cos(theta)*sin(psi);
 dx(3)= -uv*sin(theta);
 
 %define Gains
-K=.5*[5; 10; 10];
+K=2*[5; 10; 10];
 
 
 

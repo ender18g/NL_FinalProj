@@ -4,12 +4,12 @@ close all; clc;
 addpath("functions/")
 
 scale =20;
-current = [1 1 0]';
+current = .25*[1 1 0]';
 
 % get waypoints
-iterations = 4e3;
-%wptList = RRTstar(iterations,scale);
-%wptList = flip(wptList);
+iterations = 5e3;
+wptList = RRTstar(iterations,scale);
+wptList = flip(wptList);
 
 %% plot an environment
 
@@ -92,8 +92,8 @@ for i=1:(length(wptList)-1)
 end
 
 
-% start 15 meters above path (surface)
-xf = [0 0 0 0 0 .5 0 0 .1];
+% setup initial condition
+xf = [0 0 0 0 0 1 0 0 0];
 cur_pt = wptList(1,:);
 next_pt = wptList(2,:);
 % set the xy position
@@ -118,11 +118,12 @@ for i=(1:length(wptList)-1)
 
     cur_pt = wptList(i,:);
     next_pt = wptList(i+1,:);
+
     %get the dist
     dist = norm(cur_pt-next_pt);
 
     %the next xf
-    xf = [0 0 0 0 0 .5 0 0 .1];
+    xf = [0 0 0 0 0 1 0 0 0];
 
 
     % set the xyz position
@@ -143,7 +144,7 @@ for i=(1:length(wptList)-1)
 
 
     % now simulate
-    segment =TrajFollow(x0',xf',dist,current);
+    segment =TrajFollow(x0',xf',.5*dist,current);
 
     traj.x = [traj.x; segment.x_act];
     traj.t = [traj.t; segment.t_act];
