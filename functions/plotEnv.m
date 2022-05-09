@@ -11,6 +11,8 @@ limits = [-boxSize/2 boxSize/2];
 title('RRT* Path Planning')
 xlim(limits);
 ylim(limits);
+xlabel("x (meters)")
+ylabel("y (meters)")
 
 %plot ship
 ship = imread('ship.jpg');

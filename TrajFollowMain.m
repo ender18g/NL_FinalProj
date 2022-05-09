@@ -17,7 +17,7 @@ x0 = [0 0 0 0 0 .5 0 0 .1]';
 xf = [50 50 5 0 0 .5 0 0 0]';
 
 %define current
-current = 0* [1 0 0]';
+current = 0 * [1 0 0]';
 
 % perturb the system IC with the offset:
 ic_offset = [10*[0,-1,-1/5]';zeros(6,1)];
@@ -42,7 +42,7 @@ X = A * polyt(0:.01:T,5,0);
 %% plot desired path
 figure(1)
 subplot(3,1,1);
-plot3(X(1,:), X(2,:), X(3,:), '--r',LineWidth=1.5)
+plot3(X(1,:), X(2,:), X(3,:), '--r',LineWidth=2)
 hold on;
 title("3D AUV Trajectory Following w Feedback Linearization")
 grid on;

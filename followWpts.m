@@ -4,12 +4,12 @@ close all; clc;
 addpath("functions/")
 
 scale =20;
-current = [2 0 0]';
+current = [1 1 0]';
 
 % get waypoints
-iterations = 6e3;
-wptList = RRTstar(iterations,scale);
-wptList = flip(wptList);
+iterations = 4e3;
+%wptList = RRTstar(iterations,scale);
+%wptList = flip(wptList);
 
 %% plot an environment
 
@@ -32,59 +32,64 @@ plot(wptList(:,1),wptList(:,2),LineWidth=1.5,LineStyle='--', ...
 %now add a gradual descent and climb to surface
 wptList = [wptList(:,1:2), zeros(length(wptList),1)];
 surface = 15;
-climb_d = 50;
+climb_d = 200;
 slope = surface/climb_d;
 
-% %set the beginning and end at surface
-% wptList(1,3) = surface;
-% wptList(end,3)=surface;
-% 
-% 
-% wptList=flip(wptList);
-% %this loop is for the climb
-% for i=1:(length(wptList)-5)
-%     cur_pt = wptList(i,:);
-%     next_pt = wptList(i+1,:);
-%     
-%     %get the horizontal dist
-%     dist = norm(cur_pt-next_pt);
-%     current_z = cur_pt(3);
-%     
-%     % if you arent a 0, go to 0 max dist
-%     if current_z>0
-%         next_d=current_z - dist*(slope);
-%         if next_d<0
-%             next_d = 0;
-%         end
-%         %set the desired depth for the next point
-%         wptList(i+1,3)=next_d;
-%     end
-% 
-% end
-% 
-% %reverse order of points!
-% wptList=flip(wptList);
-% 
-% %this loop is for the descent
-% for i=1:(length(wptList)-5)
-%     cur_pt = wptList(i,:);
-%     next_pt = wptList(i+1,:);
-%     
-%     %get the horizontal dist
-%     dist = norm(cur_pt-next_pt);
-%     current_z = cur_pt(3);
-%     
-%     % if you arent a 0, go to 0 max dist
-%     if current_z>0
-%         next_d=current_z - dist*(slope);
-%         if next_d<0
-%             next_d = 0;
-%         end
-%         %set the desired depth for the next point
-%         wptList(i+1,3)=next_d;
-%     end
-% 
-% end
+%set the beginning and end at surface
+wptList(1,3) = surface;
+wptList(end,3)=surface;
+
+
+wptList=flip(wptList);
+%this loop is for the climb
+for i=1:(length(wptList)-1)
+    cur_pt = wptList(i,:);
+    next_pt = wptList(i+1,:);
+
+    %get the horizontal dist
+    dist = norm(cur_pt-next_pt);
+    current_z = cur_pt(3);
+
+    % if you arent a 0, go to 0 max dist
+    if current_z>0
+        next_d=current_z - dist*(slope);
+        if next_d<0
+            next_d = 0;
+            %made 0 break!
+            wptList(i+1,3)=next_d;
+            break;
+        end
+        %set the desired depth for the next point
+        wptList(i+1,3)=next_d;
+    end
+
+end
+
+%reverse order of points!
+wptList=flip(wptList);
+
+%this loop is for the descent
+for i=1:(length(wptList)-1)
+    cur_pt = wptList(i,:);
+    next_pt = wptList(i+1,:);
+
+    %get the horizontal dist
+    dist = norm(cur_pt-next_pt);
+    current_z = cur_pt(3);
+
+    % if you arent a 0, go to 0 max dist
+    if current_z>0
+        next_d=current_z - dist*(slope);
+        if next_d<0
+            next_d = 0;
+            wptList(i+1,3)=next_d;
+            break %made it to 0, break!
+        end
+        %set the desired depth for the next point
+        wptList(i+1,3)=next_d;
+    end
+
+end
 
 
 % start 15 meters above path (surface)
@@ -102,12 +107,12 @@ traj.X = [];
 
 %create an mp4 video of plot
 v = VideoWriter('traj_follow','MPEG-4');
-v.FrameRate = 4;
+v.FrameRate = 6;
 open(v);
 
 %% for each set of waypoints
 for i=(1:length(wptList)-1)
-%for i=1:3
+    %for i=1:3
     %the last xf is the new x0
     x0= xf;
 
@@ -119,10 +124,19 @@ for i=(1:length(wptList)-1)
     %the next xf
     xf = [0 0 0 0 0 .5 0 0 .1];
 
-    
+
     % set the xyz position
     xf(1:3) = next_pt;
-    
+
+    %if climbing, raise the angle
+    if xf(3)-x0(3)>1
+        xf(4)=-tan(surface/climb_d);
+    end
+
+    if xf(3)-x0(3)<-1
+        xf(4)=tan(surface/climb_d);
+    end
+
     %set theta
     xf(5)=atan2(next_pt(2)-cur_pt(2),next_pt(1)-cur_pt(1));
 
@@ -134,7 +148,7 @@ for i=(1:length(wptList)-1)
     traj.x = [traj.x; segment.x_act];
     traj.t = [traj.t; segment.t_act];
     traj.X = [traj.X segment.X_des];
-    
+
     %get the last position as the new x0
     xf = segment.x_act(end,:);
 
@@ -156,7 +170,7 @@ figure(fig)
 plot(traj.x(:,1),traj.x(:,2),LineWidth=1,Color='blue', ...
     DisplayName="Actual AUV Trajectory")
 title("AUV Mission Execution")
-subtitle("With [2.5 0 0] m/s Current")
+subtitle("With [1 1 0] m/s Current")
 xlabel('X (meters)')
 ylabel('Y (meters)')
 grid on;
